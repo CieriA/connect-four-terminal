@@ -98,8 +98,9 @@ impl Board {
             .unwrap(); // if `has_won` is called this is surely Some
         let turn = turn.unwrap(); // same reason
 
+        // cols
         for offset in 0..WIN_NUM {
-            if x + offset + 1 < WIN_NUM || y + offset + 1 < WIN_NUM {
+            if y + offset + 1 < WIN_NUM {
                 continue;
             }
             let vec: Vec<Option<bool>> =
@@ -113,9 +114,12 @@ impl Board {
             if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
                 return true;
             }
-            
-            // STOP
-            
+        }
+        // rows
+        for offset in 0..WIN_NUM {
+            if x + offset + 1 < WIN_NUM {
+                continue;
+            }
             let vec: Vec<Option<bool>> =
                 (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
                     .filter(|cell| cell.is_some())
@@ -128,9 +132,12 @@ impl Board {
             if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
                 return true;
             }
-            
-            // STOP
-            
+        }
+        // down diagonals
+        for offset in 0..WIN_NUM {
+            if x + offset + 1 < WIN_NUM || y + offset + 1 < WIN_NUM {
+                continue;
+            }
             let vec: Vec<Option<bool>> =
                 (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
                     .filter(|cell| cell.is_some())
@@ -145,10 +152,26 @@ impl Board {
             if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
                 return true;
             }
-            
-            // STOP
-            
-            // TODO not implemented diagonal-up
+        }
+        // up-diagonals
+        for offset in 0..WIN_NUM {
+            if x + offset + 1 < WIN_NUM {
+                continue;
+            }
+            let vec: Vec<Option<bool>> =
+                (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
+                    .filter(|cell| cell.is_some())
+                    .enumerate()
+                    .filter_map(|(i, cell)| cell.unwrap().get(y + offset + i))
+                    .copied()
+                    .collect();
+
+            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+                continue;
+            };
+            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+                return true;
+            }
         }
         false
     }
@@ -213,107 +236,3 @@ impl Index<Range<usize>> for Board {
         &self.0[x]
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it() {
-        let mut map = (0..42).map(|num| (num % 7, num / 7));
-        while let Some(x) = map.next() {
-            println!("({}, {})  ", x.0, x.1);
-        }
-    }
-    #[test]
-    #[should_panic]
-    fn two() {
-        assert_eq!(0, super::Board::default()
-            .iter()
-            .nth(0)
-            .unwrap()
-            .iter()
-            .enumerate()
-            .filter(|cell| cell.1.is_none())
-            .next_back()
-            .unwrap().0
-        );
-    }
-}
-
-
-/*
-// TODO:
-        //  - Remove variables to have 1 global won
-        //  - place all of this things in a single cycle
-        //  - if the var is ever changed to true, return instead.
-        //  - at this point we dont even need the variable anymore
-        
-        let (y, turn) = self.0[x]
-            .iter()
-            .enumerate()
-            .filter(|cell| cell.1.is_some())
-            .next()
-            .unwrap(); // if `has_won` is called this is surely Some
-        let turn = turn.unwrap(); // same reason
-        
-        // WORKS
-        let mut cols = false;
-        for offset in 0..WIN_NUM {
-            if y + offset + 1 < WIN_NUM {
-                continue;
-            }
-            let vec: Vec<Option<bool>> = 
-                (0..WIN_NUM).map(|i| self.0[x].get(y + offset - i))
-                    .flatten()
-                    .copied()
-                    .collect();
-            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
-                continue;
-            };
-            
-            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
-                cols = true;
-            }
-        }
-        
-        
-        let mut rows = false;
-        for offset in 0..WIN_NUM {
-            if x + offset + 1 < WIN_NUM {
-                continue;
-            }
-            let vec: Vec<Option<bool>> =
-                (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
-                    .filter(|cell| cell.is_some())
-                    .map(|cell| cell.unwrap()[y])
-                    .collect();
-            
-            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
-                continue;
-            };
-            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
-                rows = true;
-            }
-        }
-        
-        let mut diagonals_down = false;
-        for offset in 0..WIN_NUM {
-            if x + offset + 1 < WIN_NUM || y + offset + 1 < WIN_NUM {
-                continue;
-            }
-            let vec: Vec<Option<bool>> =
-                (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
-                    .filter(|cell| cell.is_some())
-                    .enumerate()
-                    .map(|(i, cell)| cell.unwrap().get(y + offset - i))
-                    .flatten()
-                    .copied()
-                    .collect();
-
-            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
-                continue;
-            };
-            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
-                diagonals_down = true;
-            }
-        }
-*/
