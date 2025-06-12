@@ -23,7 +23,7 @@ cargo run --release
 ```
 
 ## Controls
-- 1-7 digit to choose a cell to place your cross/circle.
+- 1-7 digit to choose a cell to place your piece.
 
 ## Development notes
 This is a test for a future Connect 4 project with a GUI,
