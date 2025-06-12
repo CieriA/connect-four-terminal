@@ -1,0 +1,319 @@
+use std::{fmt::{Display, Formatter}, io, ops::{Index, IndexMut}};
+use std::ops::Range;
+use colored::{Colorize, ColoredString};
+
+const WIDTH: usize = 7;
+const HEIGHT: usize = 6;
+const WIN_NUM: usize = 4;
+const P: char = 'O';
+
+type Grid = [[Option<bool>; HEIGHT]; WIDTH];
+
+#[derive(Default, Debug)]
+struct Board(Grid);
+
+fn main() {
+    let mut board = Board::default();
+
+    let mut player = true;
+
+    println!("Connect 4!");
+    println!("Player 1 is playing as {}", p_name(true));
+    println!("Player 2 is playing as {}", p_name(false));
+    println!("To place your piece, write the number you see in the column where you want to place it");
+
+
+    loop {
+        println!("It's `{}`'s turn.", p_name(player));
+        println!("{}", board);
+
+        let mut input = String::new();
+
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
+
+        let input: usize = match input.trim().parse::<usize>() {
+            // Works because if the cond is false && _, the second is omitted (so doesn't panic)
+            Ok(num) if num > 0 && num <= WIDTH => num - 1,
+            _ => {
+                eprintln!("That's not a valid number.");
+                continue;
+            }
+        };
+        if !board.in_bounds(input) {
+            eprintln!("Column is full");
+            continue;
+        }
+        match board[input] {
+            Some(_) => {
+                eprintln!("Column is full");
+                continue;
+            }
+            None => {
+                board[input] = Some(player);
+            }
+        }
+
+        if board.has_won(input % WIDTH) {
+            println!("{}", board);
+            println!("`{}` player won!", p_name(player));
+            break;
+        }
+        if board.is_full() {
+            println!("It's a tie!");
+            break;
+        }
+
+        player = !player;
+    }
+}
+
+#[inline]
+fn p_colored(turn: bool) -> ColoredString {
+    if turn {
+        P.to_string().bright_yellow().bold()
+    } else {
+        P.to_string().bright_red().bold()
+    }
+}
+#[inline]
+fn p_name(turn: bool) -> String {
+    if turn { String::from("yellow") } else { String::from("red") }
+}
+
+impl Board {
+    fn iter(&self) -> impl Iterator<Item= &[Option<bool>; HEIGHT]> {
+        self.0.iter()
+    }
+    fn is_full(&self) -> bool {
+        self.iter().all(|col| col.iter().all(Option::is_some))
+    }
+
+    fn has_won(&self, x: usize) -> bool {
+        let (y, turn) = self.0[x]
+            .iter()
+            .enumerate()
+            .find(|cell| cell.1.is_some())
+            .unwrap(); // if `has_won` is called this is surely Some
+        let turn = turn.unwrap(); // same reason
+
+        for offset in 0..WIN_NUM {
+            if x + offset + 1 < WIN_NUM || y + offset + 1 < WIN_NUM {
+                continue;
+            }
+            let vec: Vec<Option<bool>> =
+                (0..WIN_NUM).filter_map(|i| self.0[x].get(y + offset - i))
+                    .copied()
+                    .collect();
+            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+                continue;
+            };
+
+            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+                return true;
+            }
+            
+            // STOP
+            
+            let vec: Vec<Option<bool>> =
+                (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
+                    .filter(|cell| cell.is_some())
+                    .map(|cell| cell.unwrap()[y])
+                    .collect();
+
+            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+                continue;
+            };
+            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+                return true;
+            }
+            
+            // STOP
+            
+            let vec: Vec<Option<bool>> =
+                (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
+                    .filter(|cell| cell.is_some())
+                    .enumerate()
+                    .filter_map(|(i, cell)| cell.unwrap().get(y + offset - i))
+                    .copied()
+                    .collect();
+
+            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+                continue;
+            };
+            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+                return true;
+            }
+            
+            // STOP
+            
+            
+        }
+        false
+    }
+    fn in_bounds(&self, col: usize) -> bool {
+        self.0[col].iter().any(Option::is_none)
+    }
+}
+
+impl Display for Board {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // ---------------------------------------
+        for y in 0..HEIGHT {
+            for x in 0..WIDTH {
+                match self.0[x][y] {
+                    Some(player) => write!(f, "{}", p_colored(player))?,
+                    None => write!(f, "{}", x + 1)?,
+                }
+                if x + 1 != WIDTH {
+                    write!(f, " | ")?;
+                }
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
+
+impl Index<usize> for Board {
+    type Output = Option<bool>;
+    /// before indexing the board check that that column has at least 1 space empty.
+    fn index(&self, x: usize) -> &Self::Output {
+        let y = self
+            .iter()
+            .nth(x)
+            .unwrap()
+            .iter()
+            .enumerate()
+            .filter(|cell| cell.1.is_none())
+            .next_back()
+            .unwrap().0;
+        &self.0[x][y]
+    }
+}
+impl IndexMut<usize> for Board {
+    /// before indexing the board check that that column has at least 1 space empty.
+    fn index_mut(&mut self, x: usize) -> &mut Self::Output {
+        let y = self
+            .iter()
+            .nth(x)
+            .unwrap()
+            .iter()
+            .enumerate()
+            .filter(|cell| cell.1.is_none())
+            .next_back()
+            .unwrap().0;
+        &mut self.0[x][y]
+    }
+}
+impl Index<Range<usize>> for Board {
+    type Output = [[Option<bool>; HEIGHT]];
+    fn index(&self, x: Range<usize>) -> &Self::Output {
+        &self.0[x]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it() {
+        let mut map = (0..42).map(|num| (num % 7, num / 7));
+        while let Some(x) = map.next() {
+            println!("({}, {})  ", x.0, x.1);
+        }
+    }
+    #[test]
+    #[should_panic]
+    fn two() {
+        assert_eq!(0, super::Board::default()
+            .iter()
+            .nth(0)
+            .unwrap()
+            .iter()
+            .enumerate()
+            .filter(|cell| cell.1.is_none())
+            .next_back()
+            .unwrap().0
+        );
+    }
+}
+
+
+/*
+// TODO:
+        //  - Remove variables to have 1 global won
+        //  - place all of this things in a single cycle
+        //  - if the var is ever changed to true, return instead.
+        //  - at this point we dont even need the variable anymore
+        
+        let (y, turn) = self.0[x]
+            .iter()
+            .enumerate()
+            .filter(|cell| cell.1.is_some())
+            .next()
+            .unwrap(); // if `has_won` is called this is surely Some
+        let turn = turn.unwrap(); // same reason
+        
+        // WORKS
+        let mut cols = false;
+        for offset in 0..WIN_NUM {
+            if y + offset + 1 < WIN_NUM {
+                continue;
+            }
+            let vec: Vec<Option<bool>> = 
+                (0..WIN_NUM).map(|i| self.0[x].get(y + offset - i))
+                    .flatten()
+                    .copied()
+                    .collect();
+            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+                continue;
+            };
+            
+            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+                cols = true;
+            }
+        }
+        
+        
+        let mut rows = false;
+        for offset in 0..WIN_NUM {
+            if x + offset + 1 < WIN_NUM {
+                continue;
+            }
+            let vec: Vec<Option<bool>> =
+                (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
+                    .filter(|cell| cell.is_some())
+                    .map(|cell| cell.unwrap()[y])
+                    .collect();
+            
+            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+                continue;
+            };
+            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+                rows = true;
+            }
+        }
+        
+        let mut diagonals_down = false;
+        for offset in 0..WIN_NUM {
+            if x + offset + 1 < WIN_NUM || y + offset + 1 < WIN_NUM {
+                continue;
+            }
+            let vec: Vec<Option<bool>> =
+                (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
+                    .filter(|cell| cell.is_some())
+                    .enumerate()
+                    .map(|(i, cell)| cell.unwrap().get(y + offset - i))
+                    .flatten()
+                    .copied()
+                    .collect();
+
+            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+                continue;
+            };
+            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+                diagonals_down = true;
+            }
+        }
+*/

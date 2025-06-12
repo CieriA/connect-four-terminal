@@ -1,0 +1,8 @@
+[package]
+name = "connect-four-terminal"
+version = "0.1.0"
+edition = "2024"
+repository = "hhtps://github.com/CieriA/connect-four-terminal"
+
+[dependencies]
+colored = "3.0.0"
