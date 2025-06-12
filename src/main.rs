@@ -148,7 +148,7 @@ impl Board {
             
             // STOP
             
-            
+            // TODO not implemented diagonal-up
         }
         false
     }
