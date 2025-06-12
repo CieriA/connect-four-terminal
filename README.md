@@ -12,8 +12,8 @@ A Connect 4 implementation on the terminal (pass-to-play), written in [Rust](htt
 ## Building the project
 Clone the repository and build it in release mode:
 ```bash
-git clone https://github.com/CieriA/tris-terminal
-cd tris-terminal
+git clone https://github.com/CieriA/connect-four-terminal
+cd connect-four-terminal
 cargo build --release
 ```
 
