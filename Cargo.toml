@@ -2,7 +2,10 @@
 name = "connect-four-terminal"
 version = "0.1.0"
 edition = "2024"
+authors = ["CieriA"]
+license = "ISC"
 repository = "hhtps://github.com/CieriA/connect-four-terminal"
+readme = "README.md"
 
 [dependencies]
 colored = "3.0.0"
