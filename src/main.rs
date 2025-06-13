@@ -1,5 +1,4 @@
 use std::{fmt::{Display, Formatter}, io, ops::{Index, IndexMut}};
-use std::ops::Range;
 use colored::{Colorize, ColoredString};
 
 const WIDTH: usize = 7;
@@ -78,14 +77,16 @@ fn p_colored(turn: bool) -> ColoredString {
     }
 }
 #[inline]
-fn p_name(turn: bool) -> String {
-    if turn { String::from("yellow") } else { String::from("red") }
+fn p_name(turn: bool) -> ColoredString {
+    if turn { "yellow".bright_yellow().bold() } else { "red".bright_red().bold() }
 }
 
 impl Board {
+    #[inline]
     fn iter(&self) -> impl Iterator<Item= &[Option<bool>; HEIGHT]> {
         self.0.iter()
     }
+    #[inline]
     fn is_full(&self) -> bool {
         self.iter().all(|col| col.iter().all(Option::is_some))
     }
@@ -157,14 +158,14 @@ impl Board {
         }
         // up-diagonals
         for offset in 0..WIN_NUM {
-            if x + offset + 1 < WIN_NUM {
+            if x + offset + 1 < WIN_NUM || y < offset {
                 continue;
             }
             let vec: Vec<Option<bool>> =
                 (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
                     .filter(|cell| cell.is_some())
                     .enumerate()
-                    .filter_map(|(i, cell)| cell.unwrap().get(y + offset + i))
+                    .filter_map(|(i, cell)| cell.unwrap().get(y - offset + i))
                     .copied()
                     .collect();
 
@@ -177,8 +178,21 @@ impl Board {
         }
         false
     }
-    fn in_bounds(&self, col: usize) -> bool {
+    #[inline]
+    const fn in_bounds(&self, col: usize) -> bool {
         self.0[col][0].is_none()
+    }
+
+    fn get_y(&self, x: usize) -> usize {
+        self
+            .iter()
+            .nth(x)
+            .unwrap()
+            .iter()
+            .enumerate()
+            .filter(|(_, cell)| cell.is_none())
+            .next_back()
+            .unwrap().0
     }
 }
 
@@ -205,36 +219,14 @@ impl Index<usize> for Board {
     type Output = Option<bool>;
     /// before indexing the board check that that column has at least 1 space empty.
     fn index(&self, x: usize) -> &Self::Output {
-        let y = self
-            .iter()
-            .nth(x)
-            .unwrap()
-            .iter()
-            .enumerate()
-            .filter(|cell| cell.1.is_none())
-            .next_back()
-            .unwrap().0;
+        let y = self.get_y(x);
         &self.0[x][y]
     }
 }
 impl IndexMut<usize> for Board {
     /// before indexing the board check that that column has at least 1 space empty.
     fn index_mut(&mut self, x: usize) -> &mut Self::Output {
-        let y = self
-            .iter()
-            .nth(x)
-            .unwrap()
-            .iter()
-            .enumerate()
-            .filter(|cell| cell.1.is_none())
-            .next_back()
-            .unwrap().0;
+        let y = self.get_y(x);
         &mut self.0[x][y]
-    }
-}
-impl Index<Range<usize>> for Board {
-    type Output = [[Option<bool>; HEIGHT]];
-    fn index(&self, x: Range<usize>) -> &Self::Output {
-        &self.0[x]
     }
 }
