@@ -53,8 +53,7 @@ fn main() {
                 board[input] = Some(player);
             }
         }
-
-        if board.has_won(input % WIDTH) {
+        if board.has_won(input) {
             println!("{}", board);
             println!("`{}` player won!", p_name(player));
             break;
