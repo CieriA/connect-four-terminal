@@ -95,7 +95,7 @@ impl Board {
         let (y, turn) = self.0[x]
             .iter()
             .enumerate()
-            .find(|cell| cell.1.is_some())
+            .find(|(_, cell)| cell.is_some())
             .unwrap(); // if `has_won` is called this is surely Some
         let turn = turn.unwrap(); // same reason
         
