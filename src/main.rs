@@ -36,17 +36,17 @@ fn main() {
             // Works because if the cond is false && _, the second is omitted (so doesn't panic)
             Ok(num) if num > 0 && num <= WIDTH => num - 1,
             _ => {
-                eprintln!("That's not a valid number.");
+                println!("That's not a valid number.");
                 continue;
             }
         };
         if !board.in_bounds(input) {
-            eprintln!("Column is full");
+            println!("Column is full");
             continue;
         }
         match board[input] {
             Some(_) => {
-                eprintln!("Column is full");
+                println!("Column is full");
                 continue;
             }
             None => {
