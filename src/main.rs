@@ -97,6 +97,8 @@ impl Board {
             .find(|cell| cell.1.is_some())
             .unwrap(); // if `has_won` is called this is surely Some
         let turn = turn.unwrap(); // same reason
+        
+        let all_same = |cell: &Option<bool>| matches!(cell, Some(v) if *v == turn);
 
         // cols
         for offset in 0..WIN_NUM {
@@ -111,7 +113,7 @@ impl Board {
                 continue;
             };
 
-            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+            if arr.iter().all(all_same) {
                 return true;
             }
         }
@@ -129,7 +131,7 @@ impl Board {
             let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
                 continue;
             };
-            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+            if arr.iter().all(all_same) {
                 return true;
             }
         }
@@ -149,7 +151,7 @@ impl Board {
             let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
                 continue;
             };
-            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+            if arr.iter().all(all_same) {
                 return true;
             }
         }
@@ -169,14 +171,14 @@ impl Board {
             let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
                 continue;
             };
-            if arr.iter().all(|cell| matches!(cell, Some(v) if *v == turn)) {
+            if arr.iter().all(all_same) {
                 return true;
             }
         }
         false
     }
     fn in_bounds(&self, col: usize) -> bool {
-        self.0[col].iter().any(Option::is_none)
+        self.0[col][0].is_none()
     }
 }
 

@@ -29,7 +29,8 @@ cargo run --release
 This is a test for a future Connect 4 project with a GUI,
 to learn the logic behind the Connect 4' win condition.
 
-This project doesn't use any external crate.
+This project uses the following crates:
+- colored
 
 ### Docs
 To build the documentation locally:
