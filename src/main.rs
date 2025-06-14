@@ -105,15 +105,15 @@ impl Board {
             if y + offset + 1 < WIN_NUM {
                 continue;
             }
-            let vec: Vec<Option<bool>> =
+            let cells: Vec<Option<bool>> =
                 (0..WIN_NUM).filter_map(|i| self.0[x].get(y + offset - i))
                     .copied()
                     .collect();
-            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+            let Ok(cells): Result<[Option<bool>; 4], _> = cells.try_into() else {
                 continue;
             };
 
-            if arr.iter().all(all_same) {
+            if cells.iter().all(all_same) {
                 return true;
             }
         }
@@ -122,16 +122,16 @@ impl Board {
             if x + offset + 1 < WIN_NUM {
                 continue;
             }
-            let vec: Vec<Option<bool>> =
+            let cells: Vec<Option<bool>> =
                 (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
-                    .filter(|cell| cell.is_some())
-                    .map(|cell| cell.unwrap()[y])
+                    .filter(|col| col.is_some())
+                    .map(|col| col.unwrap()[y])
                     .collect();
 
-            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+            let Ok(cells): Result<[Option<bool>; 4], _> = cells.try_into() else {
                 continue;
             };
-            if arr.iter().all(all_same) {
+            if cells.iter().all(all_same) {
                 return true;
             }
         }
@@ -140,18 +140,18 @@ impl Board {
             if x + offset + 1 < WIN_NUM || y + offset + 1 < WIN_NUM {
                 continue;
             }
-            let vec: Vec<Option<bool>> =
+            let cells: Vec<Option<bool>> =
                 (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
-                    .filter(|cell| cell.is_some())
+                    .filter(|col| col.is_some())
                     .enumerate()
-                    .filter_map(|(i, cell)| cell.unwrap().get(y + offset - i))
+                    .filter_map(|(i, col)| col.unwrap().get(y + offset - i))
                     .copied()
                     .collect();
 
-            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+            let Ok(cells): Result<[Option<bool>; 4], _> = cells.try_into() else {
                 continue;
             };
-            if arr.iter().all(all_same) {
+            if cells.iter().all(all_same) {
                 return true;
             }
         }
@@ -160,18 +160,18 @@ impl Board {
             if x + offset + 1 < WIN_NUM || y < offset {
                 continue;
             }
-            let vec: Vec<Option<bool>> =
+            let cells: Vec<Option<bool>> =
                 (0..WIN_NUM).map(|i| self.0.get(x + offset - i))
-                    .filter(|cell| cell.is_some())
+                    .filter(|col| col.is_some())
                     .enumerate()
-                    .filter_map(|(i, cell)| cell.unwrap().get(y - offset + i))
+                    .filter_map(|(i, col)| col.unwrap().get(y - offset + i))
                     .copied()
                     .collect();
 
-            let Ok(arr): Result<[Option<bool>; 4], _> = vec.try_into() else {
+            let Ok(cells): Result<[Option<bool>; 4], _> = cells.try_into() else {
                 continue;
             };
-            if arr.iter().all(all_same) {
+            if cells.iter().all(all_same) {
                 return true;
             }
         }
